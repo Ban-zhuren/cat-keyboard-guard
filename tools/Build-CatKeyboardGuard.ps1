@@ -1,4 +1,4 @@
-param()
+﻿param()
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
@@ -27,18 +27,43 @@ if (-not $automationAssembly) { throw '找不到 Windows PowerShell 运行库。
 if (-not (Test-Path -LiteralPath $sourcePath)) { throw "找不到源码：$sourcePath" }
 if (-not (Test-Path -LiteralPath $iconPath)) { throw "找不到图标：$iconPath" }
 
-$compilerArguments = @(
-    '/nologo',
-    '/target:winexe',
-    '/platform:anycpu',
-    '/optimize+',
-    ('/win32icon:' + $iconPath),
-    ('/out:' + $outputPath),
-    ('/reference:' + $automationAssembly),
-    $sourcePath
-)
+$buildBase = $env:TEMP
+if ($buildBase -match '[^\x00-\x7F]') {
+    $buildBase = Join-Path $env:WINDIR 'Temp'
+}
+$buildDirectory = Join-Path $buildBase ('CatKeyboardGuard-' + [Guid]::NewGuid().ToString('N'))
+$buildSource = Join-Path $buildDirectory 'CatKeyboardGuard.cs'
+$buildIcon = Join-Path $buildDirectory 'cat-head.ico'
+$buildOutput = Join-Path $buildDirectory 'CatKeyboardGuard.exe'
 
-& $compilerPath $compilerArguments
-if ($LASTEXITCODE -ne 0) { throw "编译失败，退出码：$LASTEXITCODE" }
+New-Item -ItemType Directory -Path $buildDirectory | Out-Null
+try {
+    Copy-Item -LiteralPath $sourcePath -Destination $buildSource
+    Copy-Item -LiteralPath $iconPath -Destination $buildIcon
+
+    $compilerArguments = @(
+        '/nologo',
+        '/target:winexe',
+        '/platform:anycpu',
+        '/optimize+',
+        ('/win32icon:' + $buildIcon),
+        ('/out:' + $buildOutput),
+        ('/reference:' + $automationAssembly),
+        $buildSource
+    )
+
+    & $compilerPath $compilerArguments
+    if ($LASTEXITCODE -ne 0) { throw "编译失败，退出码：$LASTEXITCODE" }
+
+    try {
+        Copy-Item -LiteralPath $buildOutput -Destination $outputPath -Force
+    }
+    catch [System.IO.IOException] {
+        throw '无法替换 CatKeyboardGuard.exe。请先从系统托盘退出正在运行的程序，然后重新构建。'
+    }
+}
+finally {
+    Remove-Item -LiteralPath $buildDirectory -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 Write-Output $outputPath

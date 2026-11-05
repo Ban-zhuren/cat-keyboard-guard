@@ -1,0 +1,41 @@
+name: 问题反馈
+description: 报告程序错误或兼容性问题
+title: "[问题] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: 请不要填写密码、访问令牌或其他个人信息。键盘功能问题请先确认可以用鼠标解锁或退出。
+  - type: input
+    id: windows
+    attributes:
+      label: Windows 版本
+      description: 例如 Windows 11 24H2
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 电脑型号
+    validations:
+      required: false
+  - type: input
+    id: remote
+    attributes:
+      label: 远程控制软件
+      description: 没有使用远程控制时可留空
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 按顺序说明怎样触发问题
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果和实际结果
+    validations:
+      required: true
