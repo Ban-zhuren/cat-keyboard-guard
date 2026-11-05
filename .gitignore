@@ -1,0 +1,15 @@
+# Windows and editor-generated files
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Temporary build and diagnostic output
+*.log
+*.tmp
+*.bak
+bin/
+obj/
